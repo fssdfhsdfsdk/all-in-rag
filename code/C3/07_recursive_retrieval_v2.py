@@ -13,6 +13,7 @@ load_dotenv()
 # 配置模型
 Settings.llm = DeepSeek(model="deepseek-chat", api_key=os.getenv("DEEPSEEK_API_KEY"))
 Settings.embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-zh-v1.5")
+Settings.llm = None
 
 # 1. 加载和预处理数据
 excel_file = '../../data/C3/excel/movie.xlsx'
@@ -21,6 +22,28 @@ xls = pd.ExcelFile(excel_file)
 summary_docs = []
 content_docs = []
 
+"""
+这行做了三件事：
+.astype(str)
+把“评分人数”列中的所有值强制转为字符串。
+→ 为什么？因为原始数据可能是混合类型（比如数字、字符串、空值），统一成字符串才方便处理文本。
+.str.replace('人评价', '')
+使用 pandas 的字符串方法（.str 访问器），把每个单元格中的 '人评价' 这三个字删掉。
+→ 比如 '12345人评价' 变成 '12345'。
+.str.strip()
+去掉字符串首尾的空白字符（比如空格、换行符），防止 ' 123 ' 这种情况影响后续转换
+
+这行又分三步：
+pd.to_numeric(..., errors='coerce')
+尝试把字符串转为数字（浮点数）。
+如果成功 → 变成数字（如 '12345' → 12345.0）
+如果失败（比如 'nan'、'abc'）→ 变成 NaN（因为 errors='coerce'）
+.fillna(0)
+把所有 NaN 值替换成 0。
+→ 因为有些行可能没有评分人数，或者清洗后无效，我们统一设为 0。
+.astype(int)
+把浮点数（如 12345.0）转为整数（12345），节省内存且更符合业务含义（人数不可能是小数）。
+"""
 print("开始加载和处理Excel文件...")
 for sheet_name in xls.sheet_names:
     df = pd.read_excel(xls, sheet_name=sheet_name)
@@ -67,7 +90,7 @@ def query_safe_recursive(query_str):
     
     # 第一步：路由 - 在摘要索引中找到最相关的表格
     print("\n第一步：在摘要索引中进行路由...")
-    summary_retriever = VectorIndexRetriever(index=summary_index, similarity_top_k=1)
+    summary_retriever = VectorIndexRetriever(index=summary_index, similarity_top_k=2)
     retrieved_nodes = summary_retriever.retrieve(query_str)
     
     if not retrieved_nodes:
@@ -76,6 +99,8 @@ def query_safe_recursive(query_str):
     # 获取匹配到的工作表名称
     matched_sheet_name = retrieved_nodes[0].node.metadata['sheet_name']
     print(f"路由结果：匹配到工作表 -> {matched_sheet_name}")
+    for node in retrieved_nodes:
+        print("All Nodes ===> ",node.metadata['sheet_name'])
     
     # 第二步：检索 - 在内容索引中根据工作表名称过滤并检索具体内容
     print("\n第二步：在内容索引中检索具体信息...")
@@ -95,7 +120,7 @@ def query_safe_recursive(query_str):
     return response
 
 # 4. 执行查询
-query = "1994年评分人数最少的电影是哪一部？"
+query = "1994年和1995年评分人数最少的电影是哪一部？"
 response = query_safe_recursive(query)
 
 print(f"最终回答: {response}")

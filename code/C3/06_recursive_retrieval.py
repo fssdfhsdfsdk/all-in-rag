@@ -23,6 +23,7 @@ xls = pd.ExcelFile(excel_file)
 df_query_engines = {}
 all_nodes = []
 
+print("sheet counts: ", len(xls.sheet_names))
 for sheet_name in xls.sheet_names:
     df = pd.read_excel(xls, sheet_name=sheet_name)
     
@@ -57,7 +58,51 @@ recursive_retriever = RecursiveRetriever(
 query_engine = RetrieverQueryEngine.from_args(recursive_retriever)
 
 # 5. 执行查询
-query = "1994年评分人数最少的电影是哪一部？"
+query = "1994年与1995年评分人数最少的电影是哪一部？"
 print(f"查询: {query}")
 response = query_engine.query(query)
 print(f"回答: {response}")
+
+"""
+INFO:sentence_transformers.SentenceTransformer:Load pretrained SentenceTransformer: BAAI/bge-small-zh-v1.5
+Load pretrained SentenceTransformer: BAAI/bge-small-zh-v1.5
+INFO:sentence_transformers.SentenceTransformer:1 prompt is loaded, with the key: query
+1 prompt is loaded, with the key: query
+sheet counts:  27
+查询: 1994年评分人数最少的电影是哪一部？
+Retrieving with query id None: 1994年评分人数最少的电影是哪一部？
+Retrieved node with id, entering: 年份_1994
+Retrieving with query id 年份_1994: 1994年评分人数最少的电影是哪一部？
+INFO:httpx:HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+> Pandas Instructions:
+```
+df.loc[df['编号'] == 28, '电影名称'].iloc[0]
+```
+> Pandas Output: 活着
+Got response: 活着
+INFO:httpx:HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+回答: 活着
+"""
+
+
+"""
+查询: 1994年与1995年评分人数最少的电影是哪一部
+
+Retrieved node with id, entering: 年份_1994
+Retrieving with query id 年份_1994: 1994年与1995年评分人数最少的电影是哪一部？
+INFO:httpx:HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+ - 》：严重问题，内部支持的只有单年份。后续使用 LLM 生成 pands 查询代码，实际上不支持。
+      单个df只有一个年份的数据。
+> Pandas Instructions:
+```
+df[(df['编号'].isin([2, 5])) & (df['评分人数'] == df[df['编号'].isin([2, 5])]['评分人数'].min())]['电影名称'].iloc[0]
+```
+
+报错：
+IndexError: single positional indexer is out-of-bounds
+> Pandas Output: There was an error running the output as Python code. Error message: single positional indexer is out-of-bounds
+
+"""
