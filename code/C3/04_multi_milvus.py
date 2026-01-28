@@ -10,8 +10,13 @@ from PIL import Image
 
 # 1. 初始化设置
 MODEL_NAME = "BAAI/bge-base-en-v1.5"
-MODEL_PATH = "../../models/bge/Visualized_base_en_v1.5.pth"
-DATA_DIR = "../../data/C3"
+
+
+from pathlib import Path
+SCRIPT_DIR = Path(__file__).resolve().parent
+MODEL_PATH = SCRIPT_DIR / "../../models/bge/Visualized_base_en_v1.5.pth"
+DATA_DIR = SCRIPT_DIR / "../../data/C3"
+
 COLLECTION_NAME = "multimodal_demo"
 MILVUS_URI = "http://localhost:19530"
 
