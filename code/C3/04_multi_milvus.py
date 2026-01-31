@@ -37,7 +37,9 @@ class Encoder:
             query_emb = self.model.encode(image=image_path)
         return query_emb.tolist()[0]
 
-def visualize_results(query_image_path: str, retrieved_images: list, img_height: int = 300, img_width: int = 300, row_count: int = 3) -> np.ndarray:
+def visualize_results(query_image_path: str, retrieved_images: list, 
+                        img_height: int = 300, img_width: int = 300, 
+                        row_count: int = 3) -> np.ndarray:
     """从检索到的图像列表创建一个全景图用于可视化。"""
     panoramic_width = img_width * row_count
     panoramic_height = img_height * row_count
@@ -130,8 +132,8 @@ print("已加载 Collection 到内存中。")
 
 # 7. 执行多模态检索
 print(f"\n--> 正在 '{COLLECTION_NAME}' 中执行检索")
-query_image_path = os.path.join(DATA_DIR, "dragon", "query.png")
-query_text = "一条龙"
+query_image_path = os.path.join(DATA_DIR, "dragon", "dog2.png")
+query_text = "一条狗"
 query_vector = encoder.encode_query(image_path=query_image_path, text=query_text)
 
 search_results = milvus_client.search(

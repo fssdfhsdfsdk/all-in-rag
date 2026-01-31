@@ -15,21 +15,24 @@ from llama_index.core.evaluation import DatasetGenerator, QueryResponseDataset
 
 Settings.llm = DeepSeek(model="deepseek-chat", temperature=0.1, api_key=os.getenv("DEEPSEEK_API_KEY"))
 Settings.embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-en")
+from pathlib import Path
+SCRIPT_DIR = Path(__file__).resolve().parent
 
 async def main():
     # 1. 加载文档
-    reader = SimpleDirectoryReader(input_files=["../../data/C3/pdf/IPCC_AR6_WGII_Chapter03.pdf"])
+    reader = SimpleDirectoryReader(input_files=
+                    [SCRIPT_DIR / "../../data/C3/pdf/IPCC_AR6_WGII_Chapter03.pdf"])
     documents = reader.load_data()
 
     # 1.1 加载或生成响应评估数据集
-    if os.path.exists("./c6_response_eval_dataset.json"):
+    if os.path.exists(SCRIPT_DIR / "./c6_response_eval_dataset.json"):
         print("加载响应评估数据集...")
-        response_eval_dataset = QueryResponseDataset.from_json("./c6_response_eval_dataset.json")
+        response_eval_dataset = QueryResponseDataset.from_json( SCRIPT_DIR / "./c6_response_eval_dataset.json")
     else:
         print("生成响应评估数据集...")
         dataset_generator = DatasetGenerator.from_documents(documents[:10])  # 减少文档数量
         response_eval_dataset = await dataset_generator.agenerate_dataset_from_nodes(num=15)  # 减少问题数量
-        response_eval_dataset.save_json("./c6_response_eval_dataset.json")
+        response_eval_dataset.save_json(SCRIPT_DIR / "./c6_response_eval_dataset.json")
 
 
 
@@ -54,6 +57,7 @@ async def main():
     # 2.2 常规分块检索（基准）
     base_parser = SentenceSplitter(chunk_size=512)
     base_nodes = base_parser.get_nodes_from_documents(documents)
+    # 阻塞点-文档太大耗时严重
     base_index = VectorStoreIndex(base_nodes)
 
     base_query_engine = base_index.as_query_engine(similarity_top_k=2)

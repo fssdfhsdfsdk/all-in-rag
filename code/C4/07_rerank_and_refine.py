@@ -141,7 +141,9 @@ llm = ChatDeepSeek(
 )
 
 # 1. 加载和处理文档
-loader = TextLoader("../../data/C4/txt/ai.txt", encoding="utf-8")
+from pathlib import Path
+SCRIPT_DIR = Path(__file__).resolve().parent
+loader = TextLoader(SCRIPT_DIR / "../../data/C4/txt/ai.txt", encoding="utf-8")
 documents = loader.load()
 text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=100)
 docs = text_splitter.split_documents(documents)

@@ -20,7 +20,7 @@ bili = []
 try:
     loader = BiliBiliLoader(video_urls=video_urls)
     docs = loader.load()
-    
+    print(len(docs))
     for doc in docs:
         original = doc.metadata
         

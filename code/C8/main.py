@@ -1,7 +1,7 @@
 """
 RAG系统主程序
 """
-
+print("------------")
 import os
 import sys
 import logging
@@ -26,7 +26,7 @@ load_dotenv()
 # 配置日志
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    format='%(asctime)s -=== %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
 
@@ -50,9 +50,6 @@ class RecipeRAGSystem:
         if not Path(self.config.data_path).exists():
             raise FileNotFoundError(f"数据路径不存在: {self.config.data_path}")
 
-        # 检查API密钥
-        if not os.getenv("MOONSHOT_API_KEY"):
-            raise ValueError("请设置 MOONSHOT_API_KEY 环境变量")
     
     def initialize_system(self):
         """初始化所有模块"""
@@ -356,13 +353,16 @@ def main():
     """主函数"""
     try:
         # 创建RAG系统
+        print("====>")
         rag_system = RecipeRAGSystem()
         
         # 运行交互式问答
         rag_system.run_interactive()
         
     except Exception as e:
-        logger.error(f"系统运行出错: {e}")
+        import traceback 
+        traceback.print_exc()
+        logger.error(f"系统运行出错=====》: {e}")
         print(f"系统错误: {e}")
 
 if __name__ == "__main__":
