@@ -4,10 +4,19 @@ import numpy as np
 from pymilvus import connections, MilvusClient, FieldSchema, CollectionSchema, DataType, Collection, AnnSearchRequest, RRFRanker
 from pymilvus.model.hybrid import BGEM3EmbeddingFunction
 
+from pathlib import Path
+# 如果在 Notebook 中运行，__file__ 不存在，改用当前工作目录
+try:
+    SCRIPT_DIR = Path(__file__).resolve().parent
+except NameError:
+    SCRIPT_DIR = Path.cwd()  # 使用当前工作目录
+print(SCRIPT_DIR)
+
+
 # 1. 初始化设置
 COLLECTION_NAME = "dragon_hybrid_demo"
 MILVUS_URI = "http://localhost:19530"  # 服务器模式
-DATA_PATH = "../../data/C4/metadata/dragon.json"  # 相对路径
+DATA_PATH = SCRIPT_DIR / "../../data/C4/metadata/dragon.json"  # 相对路径
 BATCH_SIZE = 50
 
 # 2. 连接 Milvus 并初始化嵌入模型
@@ -74,10 +83,7 @@ if collection.is_empty:
             item.get('title', ''),
             item.get('description', ''),
             item.get('location', ''),
-            item.get('environment', ''),
-            # *item.get('combat_details', {}).get('combat_style', []),
-            # *item.get('combat_details', {}).get('abilities_used', []),
-            # item.get('scene_info', {}).get('time_of_day', '')
+            item.get('environment', '')
         ]
         docs.append(' '.join(filter(None, parts)))
         metadata.append(item)
